@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title>atom1.0 example</title>
+  <link href="http://url/to/site"/>
+
+  <entry>
+    <title>entry1 title</title>
+    <link href="http://url/to/entry1"/>
+    <summary>entry1 summary</summary>
+  </entry>
+
+  <entry>
+    <title>entry2 title</title>
+    <link href="http://url/to/entry2"/>
+    <summary>entry2 summary</summary>
+  </entry>
+
+</feed>

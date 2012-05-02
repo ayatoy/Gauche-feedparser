@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<rdf:RDF
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://purl.org/rss/1.0/">
+
+  <channel rdf:about="http://url/to/feed">
+    <title>rss1.0 example</title>
+    <link>http://url/to/site</link>
+    <description>site description</description>
+
+    <items>
+      <rdf:Seq>
+        <rdf:li resource="http://url/to/item1" />
+        <rdf:li resource="http://url/to/item2" />
+      </rdf:Seq>
+    </items>
+
+  </channel>
+
+  <item rdf:about="http://url/to/item1">
+    <title>item1 title</title>
+    <link>http://url/to/item1</link>
+    <description>item1 description</description>
+  </item>
+
+  <item rdf:about="http://url/to/item2">
+    <title>item2 title</title>
+    <link>http://url/to/item2</link>
+    <description>item2 description</description>
+  </item>
+
+</rdf:RDF>

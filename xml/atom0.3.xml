@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed version="0.3" xmlns="http://purl.org/atom/ns#">
+
+  <title>atom0.3 example</title>
+  <link rel="alternate" type="text/html" href="http://url/to/site"/>
+
+  <entry>
+    <title>entry1 title</title>
+    <link rel="alternate" type="text/html" href="http://url/to/entry1"/>
+  </entry>
+
+  <entry>
+    <title>entry2 title</title>
+    <link rel="alternate" type="text/html" href="http://url/to/entry2"/>
+  </entry>
+
+</feed>
