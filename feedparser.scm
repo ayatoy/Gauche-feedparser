@@ -21,13 +21,13 @@
 
 ;;;; constant
 
-(define-constant FEED_NAMESPACE
+(define-constant FEEDPARSER_NAMESPACE
   '((rss1.0  . "http://purl.org/rss/1.0/")
     (rdf     . "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
     (atom1.0 . "http://www.w3.org/2005/Atom")
     (atom0.3 . "http://purl.org/atom/ns#")))
 
-(define-constant FEED_USER_AGENT
+(define-constant FEEDPARSER_USER_AGENT
   "Mozilla/5.0 (compatible; feedparser/0.0;)")
 
 ;;;; rss1.0
@@ -126,51 +126,37 @@
 (define feed-atom1.0-entry-link
   (if-car-sxpath '((atom1.0:link 1) @ href *text*)))
 
-;;;; format
-
-(define (feed-format feed-title feed-link feed-entries entry-title entry-link)
-  (^[sxml]
-    `(("title"   . ,(feed-title sxml))
-      ("link"    . ,(feed-link sxml))
-      ("entries" . ,(map (^[e] `(("title" . ,(entry-title e))
-                                 ("link"  . ,(entry-link e))))
-                         (feed-entries sxml))))))
+;;;; parse
 
 (define (feed-sxml->alist sxml)
   (cond [(feed-rss1.0? sxml)
-         ((feed-format feed-rss1.0-title
-                       feed-rss1.0-link
-                       feed-rss1.0-entries
-                       feed-rss1.0-entry-title
-                       feed-rss1.0-entry-link)
-          sxml)]
+         `(("title"   . ,(feed-rss1.0-title sxml))
+           ("link"    . ,(feed-rss1.0-link sxml))
+           ("entries" . ,(map (^[e] `(("title" . ,(feed-rss1.0-entry-title e))
+                                      ("link"  . ,(feed-rss1.0-entry-link e))))
+                              (feed-rss1.0-entries sxml))))]
         [(feed-rss2.0? sxml)
-         ((feed-format feed-rss2.0-title
-                       feed-rss2.0-link
-                       feed-rss2.0-entries
-                       feed-rss2.0-entry-title
-                       feed-rss2.0-entry-link)
-          sxml)]
+         `(("title"   . ,(feed-rss2.0-title sxml))
+           ("link"    . ,(feed-rss2.0-link sxml))
+           ("entries" . ,(map (^[e] `(("title" . ,(feed-rss2.0-entry-title e))
+                                      ("link"  . ,(feed-rss2.0-entry-link e))))
+                              (feed-rss2.0-entries sxml))))]
         [(feed-atom0.3? sxml)
-         ((feed-format feed-atom0.3-title
-                       feed-atom0.3-link
-                       feed-atom0.3-entries
-                       feed-atom0.3-entry-title
-                       feed-atom0.3-entry-link)
-          sxml)]
+         `(("title"   . ,(feed-atom0.3-title sxml))
+           ("link"    . ,(feed-atom0.3-link sxml))
+           ("entries" . ,(map (^[e] `(("title" . ,(feed-atom0.3-entry-title e))
+                                      ("link"  . ,(feed-atom0.3-entry-link e))))
+                              (feed-atom0.3-entries sxml))))]
         [(feed-atom1.0? sxml)
-         ((feed-format feed-atom1.0-title
-                       feed-atom1.0-link
-                       feed-atom1.0-entries
-                       feed-atom1.0-entry-title
-                       feed-atom1.0-entry-link)
-          sxml)]
+         `(("title"   . ,(feed-atom1.0-title sxml))
+           ("link"    . ,(feed-atom1.0-link sxml))
+           ("entries" . ,(map (^[e] `(("title" . ,(feed-atom1.0-entry-title e))
+                                      ("link"  . ,(feed-atom1.0-entry-link e))))
+                              (feed-atom1.0-entries sxml))))]
         [else (error <feedparser-error> "unknown type")]))
 
-;;;; feedparser
-
 (define (feedparser-from-port port)
-  (feed-sxml->alist (ssax:xml->sxml port FEED_NAMESPACE)))
+  (feed-sxml->alist (ssax:xml->sxml port FEEDPARSER_NAMESPACE)))
 
 (define (feedparser-from-string str)
    (call-with-input-string str feedparser-from-port))
@@ -192,6 +178,7 @@
                             (when query (format out "?~A" query))
                             (when frag (format out "#~A" frag))))
                         :secure (equal? scheme "https")
+                        :user-agent FEEDPARSER_USER_AGENT
                         header-kv-list)])
     (unless (string=? status "200")
       (error <feedparser-error> "unexpected status:" status))
