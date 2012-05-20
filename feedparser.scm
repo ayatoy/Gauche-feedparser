@@ -5,19 +5,14 @@
   (use rfc.zlib)
   (use sxml.ssax)
   (use sxml.sxpath)
-  (use util.list)
   (export <feedparser-error>
           feedparser-error?
           feedparser-from-port
           feedparser-from-string
           feedparser-from-file
           feedparser))
+
 (select-module feedparser)
-
-;;;; conditon
-
-(define-condition-type <feedparser-error> <error>
-  feedparser-error?)
 
 ;;;; constant
 
@@ -29,6 +24,11 @@
 
 (define-constant FEEDPARSER_USER_AGENT
   "Mozilla/5.0 (compatible; feedparser/0.0;)")
+
+;;;; conditon
+
+(define-condition-type <feedparser-error> <error>
+  feedparser-error?)
 
 ;;;; rss1.0
 
@@ -45,6 +45,9 @@
 (define feed-rss1.0-link
   (if-car-sxpath '(rdf:RDF rss1.0:channel (rss1.0:link 1) *text*)))
 
+(define feed-rss1.0-summary
+  (if-car-sxpath '(rdf:RDF rss1.0:channel (rss1.0:description 1) *text*)))
+
 (define feed-rss1.0-entries
   (sxpath '(rdf:RDF rss1.0:item)))
 
@@ -53,6 +56,9 @@
 
 (define feed-rss1.0-entry-link
   (if-car-sxpath '((rss1.0:link 1) *text*)))
+
+(define feed-rss1.0-entry-summary
+  (if-car-sxpath '((rss1.0:description 1) *text*)))
 
 ;;;; rss2.0
 
@@ -69,6 +75,9 @@
 (define feed-rss2.0-link
   (if-car-sxpath '(rss channel (link 1) *text*)))
 
+(define feed-rss2.0-summary
+  (if-car-sxpath '(rss channel (description 1) *text*)))
+
 (define feed-rss2.0-entries
   (sxpath '(rss channel item)))
 
@@ -77,6 +86,9 @@
 
 (define feed-rss2.0-entry-link
   (if-car-sxpath '((link 1) *text*)))
+
+(define feed-rss2.0-entry-summary
+  (if-car-sxpath '((description 1) *text*)))
 
 ;;;; atom0.3
 
@@ -93,6 +105,9 @@
   (if-car-sxpath '(atom0.3:feed (atom0.3:link (@ type (equal? "text/html")) 1)
                                 @ href *text*)))
 
+(define feed-atom0.3-summary
+  (^[sxml] #f))
+
 (define feed-atom0.3-entries
   (sxpath '(atom0.3:feed atom0.3:entry)))
 
@@ -102,6 +117,9 @@
 (define feed-atom0.3-entry-link
   (if-car-sxpath
    '((atom0.3:link (@ type (equal? "text/html")) 1) @ href *text*)))
+
+(define feed-atom0.3-entry-summary
+  (if-car-sxpath '((atom0.3:summary 1) *text*)))
 
 ;;;; atom1.0
 
@@ -117,6 +135,9 @@
 (define feed-atom1.0-link
   (if-car-sxpath '(atom1.0:feed (atom1.0:link 1) @ href *text*)))
 
+(define feed-atom1.0-summary
+  (^[sxml] #f))
+
 (define feed-atom1.0-entries
   (sxpath '(atom1.0:feed atom1.0:entry)))
 
@@ -126,33 +147,48 @@
 (define feed-atom1.0-entry-link
   (if-car-sxpath '((atom1.0:link 1) @ href *text*)))
 
+(define feed-atom1.0-entry-summary
+  (if-car-sxpath '((atom1.0:summary 1) *text*)))
+
 ;;;; parse
 
 (define (feed-sxml->alist sxml)
   (cond [(feed-rss1.0? sxml)
          `(("title"   . ,(feed-rss1.0-title sxml))
            ("link"    . ,(feed-rss1.0-link sxml))
-           ("entries" . ,(map (^[e] `(("title" . ,(feed-rss1.0-entry-title e))
-                                      ("link"  . ,(feed-rss1.0-entry-link e))))
-                              (feed-rss1.0-entries sxml))))]
+           ("summary" . ,(feed-rss1.0-summary sxml))
+           ("entries"
+            . ,(map (^[e] `(("title"   . ,(feed-rss1.0-entry-title e))
+                            ("link"    . ,(feed-rss1.0-entry-link e))
+                            ("summary" . ,(feed-rss1.0-entry-summary e))))
+                    (feed-rss1.0-entries sxml))))]
         [(feed-rss2.0? sxml)
          `(("title"   . ,(feed-rss2.0-title sxml))
            ("link"    . ,(feed-rss2.0-link sxml))
-           ("entries" . ,(map (^[e] `(("title" . ,(feed-rss2.0-entry-title e))
-                                      ("link"  . ,(feed-rss2.0-entry-link e))))
-                              (feed-rss2.0-entries sxml))))]
+           ("summary" . ,(feed-rss2.0-summary sxml))
+           ("entries"
+            . ,(map (^[e] `(("title"   . ,(feed-rss2.0-entry-title e))
+                            ("link"    . ,(feed-rss2.0-entry-link e))
+                            ("summary" . ,(feed-rss2.0-entry-summary e))))
+                    (feed-rss2.0-entries sxml))))]
         [(feed-atom0.3? sxml)
          `(("title"   . ,(feed-atom0.3-title sxml))
            ("link"    . ,(feed-atom0.3-link sxml))
-           ("entries" . ,(map (^[e] `(("title" . ,(feed-atom0.3-entry-title e))
-                                      ("link"  . ,(feed-atom0.3-entry-link e))))
-                              (feed-atom0.3-entries sxml))))]
+           ("summary" . ,(feed-atom0.3-summary sxml))
+           ("entries"
+            . ,(map (^[e] `(("title"   . ,(feed-atom0.3-entry-title e))
+                            ("link"    . ,(feed-atom0.3-entry-link e))
+                            ("summary" . ,(feed-atom0.3-entry-summary e))))
+                    (feed-atom0.3-entries sxml))))]
         [(feed-atom1.0? sxml)
          `(("title"   . ,(feed-atom1.0-title sxml))
            ("link"    . ,(feed-atom1.0-link sxml))
-           ("entries" . ,(map (^[e] `(("title" . ,(feed-atom1.0-entry-title e))
-                                      ("link"  . ,(feed-atom1.0-entry-link e))))
-                              (feed-atom1.0-entries sxml))))]
+           ("summary" . ,(feed-atom1.0-summary sxml))
+           ("entries"
+            . ,(map (^[e] `(("title"   . ,(feed-atom1.0-entry-title e))
+                            ("link"    . ,(feed-atom1.0-entry-link e))
+                            ("summary" . ,(feed-atom1.0-entry-summary e))))
+                    (feed-atom1.0-entries sxml))))]
         [else (error <feedparser-error> "unknown type")]))
 
 (define (feedparser-from-port port)
@@ -162,7 +198,7 @@
    (call-with-input-string str feedparser-from-port))
 
 (define (feedparser-from-file path)
-  `(,@(call-with-input-file path feedparser-from-port) ("path" . ,path)))
+  `(("path" . ,path) ,@(call-with-input-file path feedparser-from-port)))
 
 (define (feedparser url . header-kv-list)
   (let*-values ([(scheme user host port path query frag) (uri-parse url)]
@@ -185,12 +221,12 @@
     (unless (string? body)
       (error <feedparser-error> "string required, but got:" body))
     (let1 header-alist (fold (^[x r] `(,@r ,(apply cons x))) '() header)
-      `(,@(feedparser-from-string
+      `(("url"    . ,url)
+        ("status" . ,status)
+        ("header" . ,header-alist)
+        ,@(feedparser-from-string
            (ces-convert (if-let1 ce (assoc-ref header-alist "content-encoding")
                           (cond [(string=? ce "gzip") (gzip-decode-string body)]
                                 [(string=? ce "deflate") (inflate-string body)])
                           body)
-                        "*JP"))
-        ("url"    . ,url)
-        ("status" . ,status)
-        ("header" . ,header-alist)))))
+                        "*JP"))))))
