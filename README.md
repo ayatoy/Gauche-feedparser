@@ -1,1 +1,1 @@
-Lazy feedparser for Gauche
+Simple feedparser for Gauche
