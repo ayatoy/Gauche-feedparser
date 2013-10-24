@@ -10,25 +10,27 @@
           feedparser-from-port
           feedparser-from-string
           feedparser-from-file
-          feedparser))
-
+          feedparser
+          ))
 (select-module feedparser)
 
 ;;;; constant
 
-(define-constant FEEDPARSER_NAMESPACE
+(define-constant *feedparser-version* "0.1")
+
+(define-constant *feedparser-namespace*
   '((rss1.0  . "http://purl.org/rss/1.0/")
     (rdf     . "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
     (atom1.0 . "http://www.w3.org/2005/Atom")
     (atom0.3 . "http://purl.org/atom/ns#")))
 
-(define-constant FEEDPARSER_USER_AGENT
-  "Mozilla/5.0 (compatible; feedparser/0.0;)")
+(define-constant *feedparser-user-agent*
+  (format "Gauche-feedparser/~a +https://github.com/ayatoy/Gauche-feedparser"
+          *feedparser-version*))
 
 ;;;; conditon
 
-(define-condition-type <feedparser-error> <error>
-  feedparser-error?)
+(define-condition-type <feedparser-error> <error> feedparser-error?)
 
 ;;;; rss1.0
 
@@ -192,7 +194,7 @@
         [else (error <feedparser-error> "unknown type")]))
 
 (define (feedparser-from-port port)
-  (feed-sxml->alist (ssax:xml->sxml port FEEDPARSER_NAMESPACE)))
+  (feed-sxml->alist (ssax:xml->sxml port *feedparser-namespace*)))
 
 (define (feedparser-from-string str)
    (call-with-input-string str feedparser-from-port))
@@ -214,7 +216,7 @@
                             (when query (format out "?~A" query))
                             (when frag (format out "#~A" frag))))
                         :secure (equal? scheme "https")
-                        :user-agent FEEDPARSER_USER_AGENT
+                        :user-agent *feedparser-user-agent*
                         header-kv-list)])
     (unless (string=? status "200")
       (error <feedparser-error> "unexpected status:" status))
